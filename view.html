@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Course Platform</title>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#F3F3F8',
+                            purple: '#7B4EFF',
+                            purpleHover: '#6938EE',
+                            card: '#FFFFFF',
+                            textPrimary: '#121217',
+                            textSecondary: '#6B7280',
+                            textMuted: '#9CA3AF',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar hiding rule */
+        * {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        *::-webkit-scrollbar {
+            display: none;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f1015;
+            color: #121217;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            opacity: 0;
+        }
+        .accordion-content.open {
+            max-height: 1000px;
+            opacity: 1;
+        }
+
+        .chevron-icon {
+            transition: transform 0.3s ease;
+        }
+        .chevron-icon.rotate {
+            transform: rotate(180deg);
+        }
+
+        .toast-pop {
+            animation: slideDownFade 0.3s forwards ease-out;
+        }
+        @keyframes slideDownFade {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Editable highlight outline styling for studio mode */
+        body.edit-mode [contenteditable="true"] {
+            outline: none;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        body.edit-mode [contenteditable="true"]:focus {
+            background-color: #f8f7ff;
+            border-radius: 6px;
+            box-shadow: 0 0 0 2px #7B4EFF;
+        }
+
+        /* Disable contenteditable highlight in view mode */
+        body.view-mode [contenteditable="true"] {
+            outline: none !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="flex justify-center min-h-screen sm:py-6 sm:px-4 edit-mode">
+
+    <!-- Mobile Screen Frame Wrapper -->
+    <div class="w-full max-w-[430px] bg-brand-bg min-h-screen sm:min-h-[920px] sm:max-h-[920px] sm:rounded-[44px] shadow-2xl overflow-hidden relative flex flex-col border-0 sm:border-[8px] sm:border-slate-800">
+        
+        <!-- Header Section -->
+        <header class="sticky top-0 z-30 bg-brand-bg/95 backdrop-blur-md px-5 pt-4 pb-3 space-y-3">
+            <div class="flex items-center justify-between">
+                <button onclick="handleBack()" class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-slate-800 active:scale-95 transition-transform">
+                    <i class="fa-solid fa-arrow-left text-sm"></i>
+                </button>
+                <h1 id="headerTitle" class="text-xl font-bold text-slate-900 tracking-tight">Create Course</h1>
+                
+                <!-- Action / Badge Icon -->
+                <div class="flex items-center space-x-2">
+                    <button id="shareBtn" onclick="triggerShare()" class="hidden w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-slate-800 active:scale-95 transition-transform">
+                        <i class="fa-solid fa-arrow-up-from-bracket text-sm"></i>
+                    </button>
+                    <div id="userBadge" class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-brand-purple font-bold text-xs border border-purple-100">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Switcher: Live vs Ready-Made (Studio Mode Only) -->
+            <div id="studioTabSwitcher" class="bg-slate-200/80 p-1 rounded-2xl flex items-center space-x-1">
+                <button id="tabLiveBtn" onclick="switchCourseType('live')" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-900 shadow-sm flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-tower-cell text-brand-purple text-xs"></i>
+                    <span>Live Course</span>
+                </button>
+                <button id="tabReadyBtn" onclick="switchCourseType('ready')" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-slate-800 flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-box-archive text-xs"></i>
+                    <span>Ready-Made</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Scrollable Studio / Viewer Canvas -->
+        <main class="flex-1 overflow-y-auto px-5 pt-2 pb-28 space-y-6">
+            
+            <!-- Auth Login Banner (If not logged in) -->
+            <div id="authBanner" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-3 flex items-center justify-between">
+                <div class="flex items-center space-x-2 text-xs text-amber-800">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+                    <span>Session inactive. Logging in will sync course data.</span>
+                </div>
+            </div>
+
+            <!-- Loading Spinner State (For URL Course Fetch) -->
+            <div id="courseLoadingState" class="hidden py-20 flex flex-col items-center justify-center space-y-3">
+                <div class="w-10 h-10 border-4 border-brand-purple border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-xs font-semibold text-slate-500">Loading Course Details...</p>
+            </div>
+
+            <!-- ================= LIVE COURSE DISPLAY (STUDIO & VIEWER) ================= -->
+            <div id="liveCourseStudio" class="space-y-6">
+                
+                <!-- Thumbnail Container -->
+                <div id="liveThumbnailContainer" class="relative w-full aspect-[16/10] rounded-3xl overflow-hidden shadow-sm bg-white border-2 border-dashed border-slate-300 flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-purple-50/50 transition-colors group" onclick="triggerFileUpload('liveThumbnailInput')">
+                    <img id="liveThumbnailPreview" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <input type="file" id="liveThumbnailInput" class="hidden" accept="image/*" onchange="handleThumbnailUpload(event, 'liveThumbnailPreview')">
+                    <div id="liveThumbnailPlaceholder" class="flex flex-col items-center text-center space-y-2">
+                        <div class="w-12 h-12 rounded-full bg-purple-100 text-brand-purple flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                            <i class="fa-regular fa-image"></i>
+                        </div>
+                        <span class="text-xs font-bold text-slate-700">Upload Course Thumbnail</span>
+                        <span class="text-[10px] text-slate-400">Click to browse image (PNG, JPG)</span>
+                    </div>
+                    <!-- Badge preview overlay -->
+                    <div id="liveEditableBadge" class="absolute bottom-3 right-3 bg-slate-900/60 backdrop-blur-md px-3 py-1 rounded-full flex items-center space-x-1 border border-white/10 shadow-lg">
+                        <i class="fa-solid fa-pen text-[10px] text-amber-400"></i>
+                        <span class="text-white text-[10px] font-semibold">Editable</span>
+                    </div>
+                    <div id="liveRatingBadge" class="hidden absolute bottom-3 right-3 bg-slate-900/60 backdrop-blur-md px-3 py-1 rounded-full flex items-center space-x-1 border border-white/10 shadow-lg">
+                        <i class="fa-solid fa-star text-[10px] text-amber-400"></i>
+                        <span class="text-white text-[10px] font-semibold">4.8</span>
+                    </div>
+                </div>
+
+                <!-- Title & Price Bar -->
+                <div class="space-y-2">
+                    <div id="titleHeaderLabel" class="flex items-center justify-between">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Course Title</label>
+                        <i class="fa-solid fa-pen text-slate-400 text-xs"></i>
+                    </div>
+                    <div id="liveCourseTitle" contenteditable="true" class="text-xl font-extrabold text-slate-900 tracking-tight p-1 border-b border-dashed border-slate-300">
+                        Master UI/UX Design from Scratch
+                    </div>
+                    <div id="viewerPricingBar" class="hidden flex items-baseline space-x-2 pt-1">
+                        <span id="viewerPriceText" class="text-2xl font-extrabold text-slate-900">$49.49</span>
+                        <span id="viewerDiscountText" class="text-xs text-slate-400 font-medium">With 50% Off</span>
+                    </div>
+                </div>
+
+                <!-- Detail Grid Pills -->
+                <div class="space-y-2.5">
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div class="bg-white rounded-2xl py-3 px-3.5 flex items-center justify-between shadow-sm border border-slate-100">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-regular fa-clock text-slate-800 text-xs"></i>
+                                <span id="liveScheduleDate" contenteditable="true" class="text-xs font-semibold text-slate-800">Start: Feb 10, 5:00 PM</span>
+                            </div>
+                            <i class="edit-icon-only fa-solid fa-pen text-[10px] text-slate-300"></i>
+                        </div>
+                        <div class="bg-white rounded-2xl py-3 px-3.5 flex items-center justify-between shadow-sm border border-slate-100">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-regular fa-calendar-days text-slate-800 text-xs"></i>
+                                <span id="liveDuration" contenteditable="true" class="text-xs font-semibold text-slate-800">16 Days Duration</span>
+                            </div>
+                            <i class="edit-icon-only fa-solid fa-pen text-[10px] text-slate-300"></i>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="bg-white rounded-2xl py-3 px-2 flex items-center justify-between shadow-sm border border-slate-100">
+                            <i class="fa-solid fa-user-group text-slate-800 text-xs ml-1"></i>
+                            <span id="liveSeats" contenteditable="true" class="text-xs font-semibold text-slate-800 truncate">50 Seats</span>
+                            <i class="edit-icon-only fa-solid fa-pen text-[9px] text-slate-300 mr-1"></i>
+                        </div>
+                        <div class="bg-white rounded-2xl py-3 px-2 flex items-center justify-between shadow-sm border border-slate-100">
+                            <i class="fa-solid fa-tower-cell text-slate-800 text-xs ml-1"></i>
+                            <span id="liveClassCount" contenteditable="true" class="text-xs font-semibold text-slate-800 truncate">24 Classes</span>
+                            <i class="edit-icon-only fa-solid fa-pen text-[9px] text-slate-300 mr-1"></i>
+                        </div>
+                        <div class="bg-white rounded-2xl py-3 px-2 flex items-center justify-between shadow-sm border border-slate-100">
+                            <i class="fa-regular fa-file-lines text-slate-800 text-xs ml-1"></i>
+                            <span id="liveProjectCount" contenteditable="true" class="text-xs font-semibold text-slate-800 truncate">5 Projects</span>
+                            <i class="edit-icon-only fa-solid fa-pen text-[9px] text-slate-300 mr-1"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About Section -->
+                <div class="space-y-2 pt-1">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-slate-900">About the Course</h3>
+                        <i class="edit-icon-only fa-solid fa-pen text-slate-400 text-xs"></i>
+                    </div>
+                    <div id="liveCourseAbout" contenteditable="true" class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 text-slate-600 text-xs leading-relaxed min-h-[80px]">
+                        This live interactive cohort is designed to introduce you to the core principles of product design. You will attend live interactive sessions, complete assignments, and receive personalized portfolio reviews.
+                    </div>
+                </div>
+
+                <!-- Curriculum Accordion -->
+                <div class="space-y-3 pt-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-slate-900">Course Curriculum</h3>
+                        <button id="addModuleBtn" onclick="addLiveModule()" class="text-xs font-bold text-brand-purple hover:underline flex items-center space-x-1">
+                            <i class="fa-solid fa-circle-plus"></i>
+                            <span>Add Module</span>
+                        </button>
+                    </div>
+                    
+                    <div id="liveModulesContainer" class="space-y-3">
+                        <!-- Module items generated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Instructor Profile -->
+                <div class="space-y-3 pt-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-slate-900">Instructor Info</h3>
+                        <span id="instructorSyncBadge" class="text-[10px] text-brand-purple font-semibold">Auto-synced with profile</span>
+                    </div>
+                    <div class="bg-white rounded-3xl p-3.5 flex items-center justify-between shadow-sm border border-slate-100">
+                        <div class="flex items-center space-x-3 w-full">
+                            <div class="relative w-14 h-14 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer" onclick="triggerFileUpload('instructorAvatarInput')">
+                                <img id="instructorAvatarPreview" class="hidden w-full h-full object-cover">
+                                <i id="instructorAvatarPlaceholder" class="fa-solid fa-user text-slate-400 text-xl"></i>
+                                <input type="file" id="instructorAvatarInput" class="hidden" accept="image/*" onchange="handleThumbnailUpload(event, 'instructorAvatarPreview')">
+                            </div>
+                            <div class="flex-1 space-y-1">
+                                <input id="instructorNameInput" type="text" placeholder="Instructor Name" class="text-sm font-bold text-slate-900 w-full outline-none border-b border-transparent focus:border-slate-300" value="Instructor">
+                                <input id="instructorTitleInput" type="text" placeholder="Profession / Title" class="text-xs text-slate-400 font-medium w-full outline-none border-b border-transparent focus:border-slate-300" value="Product Designer & Educator">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benefits Card -->
+                <div class="space-y-3 pt-2">
+                    <h3 class="text-lg font-bold text-slate-900">What Students Get</h3>
+                    <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2">
+                        <div id="liveBenefitsList" contenteditable="true" class="space-y-2 text-xs text-slate-600 font-medium">
+                            <div>• Live Interactive Q&A Sessions</div>
+                            <div>• Downloadable Figma Templates & Design Files</div>
+                            <div>• Certificate of Completion</div>
+                            <div>• Lifetime Community Group Access</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Studio Set Price Action -->
+                <div id="studioSetPriceSec" class="pt-2">
+                    <button onclick="openPricingBottomSheet('live')" class="w-full bg-brand-purple hover:bg-brand-purpleHover text-white font-bold text-sm py-4 rounded-full shadow-lg shadow-purple-500/25 flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform">
+                        <i class="fa-solid fa-tag text-xs"></i>
+                        <span>Set Price & Finalize Course</span>
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- ================= READY-MADE STUDIO (CREATION MODE ONLY) ================= -->
+            <div id="readyCourseStudio" class="hidden space-y-6">
+                
+                <!-- Format Selector: PDF vs Video -->
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-900">Select Material Format</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="formatPdfBtn" onclick="switchReadyFormat('pdf')" class="p-3.5 rounded-2xl border-2 border-brand-purple bg-purple-50/50 flex flex-col items-center space-y-1.5 transition-all">
+                            <i class="fa-solid fa-file-pdf text-brand-purple text-xl"></i>
+                            <span class="text-xs font-bold text-slate-900">PDF Document</span>
+                        </button>
+                        <button id="formatVideoBtn" onclick="switchReadyFormat('video')" class="p-3.5 rounded-2xl border-2 border-slate-200 bg-white flex flex-col items-center space-y-1.5 transition-all">
+                            <i class="fa-solid fa-circle-play text-slate-400 text-xl"></i>
+                            <span class="text-xs font-bold text-slate-600">Video Content</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PDF Form Fields -->
+                <div id="pdfFieldsContainer" class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-800">Resource / E-Book Name</label>
+                        <input id="pdfNameInput" type="text" placeholder="e.g. Complete UI/UX Handbook 2026" class="w-full bg-white rounded-2xl px-4 py-3.5 text-xs font-semibold text-slate-900 border border-slate-200 focus:border-brand-purple outline-none">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-800">Upload PDF File</label>
+                        <div class="relative w-full bg-white rounded-2xl border-2 border-dashed border-slate-300 p-5 flex flex-col items-center justify-center space-y-2 cursor-pointer hover:bg-slate-50" onclick="triggerFileUpload('pdfFileInput')">
+                            <input type="file" id="pdfFileInput" class="hidden" accept="application/pdf" onchange="handlePdfFileUpload(event)">
+                            <i class="fa-solid fa-cloud-arrow-up text-brand-purple text-2xl"></i>
+                            <span id="pdfFileName" class="text-xs font-bold text-slate-700">Choose PDF Document</span>
+                            <span class="text-[10px] text-slate-400">PDF files up to 50MB</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-800">Cover Image / Thumbnail</label>
+                        <div class="relative w-full aspect-[16/9] rounded-2xl bg-white border-2 border-dashed border-slate-300 flex flex-col items-center justify-center p-3 cursor-pointer overflow-hidden" onclick="triggerFileUpload('readyThumbnailInput')">
+                            <img id="readyThumbnailPreview" class="hidden absolute inset-0 w-full h-full object-cover">
+                            <input type="file" id="readyThumbnailInput" class="hidden" accept="image/*" onchange="handleThumbnailUpload(event, 'readyThumbnailPreview')">
+                            <div id="readyThumbnailPlaceholder" class="text-center space-y-1">
+                                <i class="fa-regular fa-image text-slate-400 text-xl"></i>
+                                <p class="text-xs font-semibold text-slate-600">Upload Cover Art</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-800">Resource Description</label>
+                        <textarea id="pdfDescInput" rows="3" placeholder="Explain what students will learn or get in this PDF..." class="w-full bg-white rounded-2xl p-3.5 text-xs font-medium text-slate-900 border border-slate-200 focus:border-brand-purple outline-none resize-none"></textarea>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-800">Deliverables / What's Included</label>
+                        <input id="pdfDeliverablesInput" type="text" placeholder="e.g. 120 Pages, Cheatsheets, Source Links" class="w-full bg-white rounded-2xl px-4 py-3 text-xs font-medium text-slate-900 border border-slate-200 focus:border-brand-purple outline-none">
+                    </div>
+                </div>
+
+                <!-- Video Form Fields -->
+                <div id="videoFieldsContainer" class="hidden space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-800">Video Course Title</label>
+                        <input id="videoCourseTitle" type="text" placeholder="e.g. Masterclass: Figma Advanced Animations" class="w-full bg-white rounded-2xl px-4 py-3.5 text-xs font-semibold text-slate-900 border border-slate-200 focus:border-brand-purple outline-none">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-800">Video Structure</label>
+                        <div class="bg-slate-200 p-1 rounded-2xl flex space-x-1">
+                            <button id="videoSingleTab" onclick="switchVideoMode('single')" class="flex-1 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-900 shadow-sm">One-Time Video</button>
+                            <button id="videoModuleTab" onclick="switchVideoMode('module')" class="flex-1 py-1.5 rounded-xl text-xs font-bold text-slate-600">Modules / Album</button>
+                        </div>
+                    </div>
+
+                    <div id="singleVideoSection" class="space-y-3">
+                        <div class="w-full bg-white rounded-2xl border-2 border-dashed border-slate-300 p-5 flex flex-col items-center justify-center space-y-2 cursor-pointer hover:bg-slate-50" onclick="triggerFileUpload('singleVideoFileInput')">
+                            <input type="file" id="singleVideoFileInput" class="hidden" accept="video/*" onchange="handleVideoUpload(event)">
+                            <i class="fa-solid fa-file-video text-brand-purple text-2xl"></i>
+                            <span id="singleVideoFileName" class="text-xs font-bold text-slate-700">Upload Video File</span>
+                            <span class="text-[10px] text-slate-400">MP4, MOV, MKV</span>
+                        </div>
+                    </div>
+
+                    <div id="moduleVideoSection" class="hidden space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-800">Video Chapters / Playlist</span>
+                            <button onclick="addReadyVideoChapter()" class="text-xs font-bold text-brand-purple">+ Add Video</button>
+                        </div>
+                        <div id="readyVideoChaptersList" class="space-y-2">
+                            <!-- Dynamic video chapter rows -->
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-800">Video Thumbnail</label>
+                        <div class="relative w-full aspect-[16/9] rounded-2xl bg-white border-2 border-dashed border-slate-300 flex flex-col items-center justify-center p-3 cursor-pointer overflow-hidden" onclick="triggerFileUpload('videoThumbnailInput')">
+                            <img id="videoThumbnailPreview" class="hidden absolute inset-0 w-full h-full object-cover">
+                            <input type="file" id="videoThumbnailInput" class="hidden" accept="image/*" onchange="handleThumbnailUpload(event, 'videoThumbnailPreview')">
+                            <div id="videoThumbnailPlaceholder" class="text-center space-y-1">
+                                <i class="fa-solid fa-film text-slate-400 text-xl"></i>
+                                <p class="text-xs font-semibold text-slate-600">Upload Cover Artwork</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-800">Video Overview</label>
+                        <textarea id="videoOverviewInput" rows="3" placeholder="Brief overview of what this video series covers..." class="w-full bg-white rounded-2xl p-3.5 text-xs font-medium text-slate-900 border border-slate-200 focus:border-brand-purple outline-none resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="openPricingBottomSheet('ready')" class="w-full bg-brand-purple hover:bg-brand-purpleHover text-white font-bold text-sm py-4 rounded-full shadow-lg shadow-purple-500/25 flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform">
+                        <i class="fa-solid fa-tag text-xs"></i>
+                        <span>Set Price & Save Material</span>
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- ================= READY-MADE VIEWER (PDF / VIDEO) ================= -->
+            <div id="readyMadeViewerContainer" class="hidden space-y-6">
+                <!-- Cover Banner -->
+                <div class="relative w-full aspect-[16/10] rounded-3xl overflow-hidden shadow-sm bg-slate-200">
+                    <img id="readyViewerThumbnail" src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&q=80&w=800" alt="Material Cover" class="w-full h-full object-cover">
+                    <div id="readyFormatBadge" class="absolute top-3 right-3 bg-slate-900/70 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-bold flex items-center space-x-1.5">
+                        <i class="fa-solid fa-file-pdf text-amber-400"></i>
+                        <span>PDF DOCUMENT</span>
+                    </div>
+                </div>
+
+                <!-- Material Header & Price -->
+                <div class="space-y-1">
+                    <h2 id="readyViewerTitle" class="text-xl font-extrabold text-slate-900 tracking-tight">Complete UI/UX Handbook 2026</h2>
+                    <div class="flex items-baseline space-x-2">
+                        <span id="readyViewerPrice" class="text-2xl font-extrabold text-slate-900">$29.99</span>
+                        <span id="readyViewerDiscount" class="text-xs text-slate-400 font-medium">Included Digital Download</span>
+                    </div>
+                </div>
+
+                <!-- Primary Action Button: Open PDF / Watch Video -->
+                <div class="pt-1">
+                    <button id="openMaterialBtn" onclick="handleOpenReadyMaterial()" class="w-full bg-brand-purple hover:bg-brand-purpleHover text-white font-bold text-sm py-4 rounded-2xl shadow-lg shadow-purple-500/25 flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform">
+                        <i id="openMaterialIcon" class="fa-solid fa-file-pdf"></i>
+                        <span id="openMaterialLabel">Open PDF Reader</span>
+                    </button>
+                </div>
+
+                <!-- Overview -->
+                <div class="space-y-2 pt-1">
+                    <h3 class="text-lg font-bold text-slate-900">Material Description</h3>
+                    <p id="readyViewerDescription" class="bg-white rounded-2xl p-4 shadow-sm text-xs text-slate-600 leading-relaxed">
+                        Comprehensive handbook covering research, prototyping, auto-layout and design systems.
+                    </p>
+                </div>
+
+                <!-- Deliverables / Chapters List -->
+                <div class="space-y-2 pt-1">
+                    <h3 id="readyDeliverablesHeading" class="text-lg font-bold text-slate-900">What's Included</h3>
+                    <div id="readyViewerDeliverables" class="bg-white rounded-2xl p-4 shadow-sm text-xs text-slate-700 font-semibold space-y-2">
+                        • 120 High-resolution Pages
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+
+        <!-- Fixed Bottom Action Bar (In Viewer Mode Only) -->
+        <div id="viewerBottomBar" class="hidden absolute bottom-0 left-0 right-0 bg-brand-bg/95 backdrop-blur-md px-5 py-4 border-t border-slate-200/50 flex items-center justify-center z-20">
+            <button onclick="handleEnrollInCourse()" class="w-full bg-brand-purple hover:bg-brand-purpleHover text-white font-bold text-base py-4 rounded-full shadow-lg shadow-purple-500/30 flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform">
+                <span>Enroll Now</span>
+            </button>
+        </div>
+
+
+        <!-- ================= PRICING BOTTOM SHEET ================= -->
+        <div id="pricingBottomSheet" class="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-[36px] p-6 w-full space-y-5 shadow-2xl transform translate-y-full transition-transform duration-300" id="pricingBottomSheetContent">
+                
+                <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto"></div>
+
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-extrabold text-slate-900">Set Course Price</h3>
+                        <p class="text-xs text-slate-400">Specify pricing and discount offer</p>
+                    </div>
+                    <button onclick="closePricingBottomSheet()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-700">Regular Price ($)</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-3.5 text-slate-400 font-bold">$</span>
+                            <input id="pricingAmount" type="number" step="0.01" placeholder="49.99" class="w-full bg-slate-50 rounded-2xl pl-8 pr-4 py-3.5 text-base font-bold text-slate-900 border border-slate-200 focus:border-brand-purple outline-none">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-700">Discount Tag / Offer Note</label>
+                        <input id="pricingDiscountNote" type="text" placeholder="e.g. With 50% Off" class="w-full bg-slate-50 rounded-2xl px-4 py-3 text-xs font-medium text-slate-900 border border-slate-200 focus:border-brand-purple outline-none">
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button id="publishSubmitBtn" onclick="saveAndPublishCourse()" class="w-full bg-brand-purple text-white font-bold text-sm py-4 rounded-full shadow-xl shadow-purple-500/30 flex items-center justify-center space-x-2 active:scale-95 transition-transform">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>Publish Course Now</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= CUSTOM iOS-STYLE 90VH PDF READER BOTTOM SHEET ================= -->
+        <div id="pdfReaderSheet" class="absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-[36px] w-full h-[90vh] flex flex-col shadow-2xl transform translate-y-full transition-transform duration-300 overflow-hidden" id="pdfReaderSheetContent">
+                
+                <!-- PDF Header Bar -->
+                <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-file-pdf text-brand-purple text-lg"></i>
+                        <h4 id="pdfSheetTitle" class="text-xs font-bold text-slate-800 truncate max-w-[180px]">Course Handbook</h4>
+                    </div>
+
+                    <!-- Middle Page Controls -->
+                    <div class="flex items-center space-x-2 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
+                        <button onclick="changePdfPage(-1)" class="text-slate-600 hover:text-slate-900 p-1">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <span id="pdfPageIndicator" class="text-[11px] font-bold text-slate-800">1 / 10</span>
+                        <button onclick="changePdfPage(1)" class="text-slate-600 hover:text-slate-900 p-1">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="closePdfReaderSheet()" class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- PDF Content Viewer Container -->
+                <div class="flex-1 bg-slate-100 p-4 overflow-y-auto flex items-center justify-center">
+                    <iframe id="pdfIframeViewer" class="w-full h-full rounded-2xl border-0 shadow-sm bg-white"></iframe>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= VIDEO PLAYER MODAL ================= -->
+        <div id="videoPlayerModal" class="absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-slate-900 rounded-3xl w-full max-w-sm p-4 space-y-3 border border-slate-800 shadow-2xl">
+                <div class="flex items-center justify-between text-white">
+                    <h4 id="videoModalTitle" class="text-xs font-bold truncate">Course Video</h4>
+                    <button onclick="closeVideoModal()" class="text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+                <div class="w-full aspect-video rounded-2xl overflow-hidden bg-black flex items-center justify-center">
+                    <video id="videoElement" controls class="w-full h-full object-contain"></video>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Toast Container -->
+        <div id="toastContainer" class="absolute top-4 left-5 right-5 z-50 pointer-events-none"></div>
+
+    </div>
+
+ <script>
+        // GLOBAL STATE & CONSTANTS
+        const AUTH_URL = "https://storage.breacher.name.ng/U6op8Nr462Z46tBgxa2COUnja5z1/my-app/auth";
+        const DB_BASE = "https://storage.breacher.name.ng/U6op8Nr462Z46tBgxa2COUnja5z1/my-app";
+
+        let currentUser = null;
+        let isViewerMode = false;
+        let loadedCourseData = null;
+
+        let activeType = 'live'; // 'live' or 'ready'
+        let readyFormat = 'pdf'; // 'pdf' or 'video'
+        let readyVideoMode = 'single'; // 'single' or 'module'
+
+        // Uploaded asset trackers
+        let uploadedLiveThumbnailUrl = "";
+        let uploadedReadyThumbnailUrl = "";
+        let uploadedInstructorAvatarUrl = "";
+        let uploadedPdfUrl = "";
+        let uploadedSingleVideoUrl = "";
+
+        // Reader state
+        let currentPdfPage = 1;
+        let totalPdfPages = 10;
+
+        // Dynamic Live Modules Data
+        let liveModules = [
+            {
+                id: 1,
+                title: "Introduction to UI/UX",
+                lessons: ["What is UI/UX Design?", "UI vs UX – Key Differences", "The Importance of UX in Product Success"]
+            },
+            {
+                id: 2,
+                title: "UX Research & Design Thinking",
+                lessons: ["User Interviews & Personas", "Empathy Mapping"]
+            }
+        ];
+
+        let readyVideoChapters = [
+            { id: 1, title: "Chapter 1: Getting Started", fileUrl: "" }
+        ];
+
+        // 1. DOM INITIALIZATION & MODE DETECTION
+        window.addEventListener("DOMContentLoaded", async () => {
+            await checkAuthSession();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const courseId = urlParams.get('course');
+
+            if (courseId) {
+                // Switch to Course Viewer Mode
+                enableCourseViewerMode(courseId);
+            } else {
+                // Course Studio Creation Mode
+                enableCourseStudioMode();
+            }
+        });
+
+        // AUTHENTICATION CHECK
+        async function checkAuthSession() {
+            try {
+                const res = await fetch(`${AUTH_URL}/me`, { method: "GET", credentials: "include" });
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUser = data.user || data;
+                    syncUserProfile(currentUser);
+                    document.getElementById('authBanner').classList.add('hidden');
+                } else {
+                    document.getElementById('authBanner').classList.remove('hidden');
+                    currentUser = { id: "usr_guest_" + Date.now(), name: "Instructor" };
+                }
+            } catch (err) {
+                document.getElementById('authBanner').classList.remove('hidden');
+                currentUser = { id: "usr_guest_" + Date.now(), name: "Instructor" };
+            }
+        }
+
+        function syncUserProfile(user) {
+            if (user.name) document.getElementById('instructorNameInput').value = user.name;
+            if (user.profession) document.getElementById('instructorTitleInput').value = user.profession;
+        }
+
+        // 2. COURSE VIEWER LOGIC (?course=id)
+        async function enableCourseViewerMode(courseId) {
+            isViewerMode = true;
+            document.body.className = "flex justify-center min-h-screen sm:py-6 sm:px-4 view-mode";
+            
+            document.getElementById('studioTabSwitcher').classList.add('hidden');
+            document.getElementById('shareBtn').classList.remove('hidden');
+            document.getElementById('userBadge').classList.add('hidden');
+            document.getElementById('studioSetPriceSec').classList.add('hidden');
+            document.getElementById('viewerBottomBar').classList.remove('hidden');
+            document.getElementById('viewerPricingBar').classList.remove('hidden');
+            document.getElementById('liveEditableBadge').classList.add('hidden');
+            document.getElementById('liveRatingBadge').classList.remove('hidden');
+            document.getElementById('titleHeaderLabel').classList.add('hidden');
+            document.getElementById('addModuleBtn').classList.add('hidden');
+            document.getElementById('instructorSyncBadge').classList.add('hidden');
+
+            // Hide editable edit pencil icons
+            document.querySelectorAll('.edit-icon-only').forEach(el => el.classList.add('hidden'));
+
+            // Fetch course payload from database
+            document.getElementById('courseLoadingState').classList.remove('hidden');
+            document.getElementById('liveCourseStudio').classList.add('hidden');
+            document.getElementById('readyCourseStudio').classList.add('hidden');
+
+            try {
+                let courseRes = await fetch(`${DB_BASE}/courses/live/${courseId}`);
+                if (!courseRes.ok) {
+                    courseRes = await fetch(`${DB_BASE}/courses/readymade/${courseId}`);
+                }
+
+                if (courseRes.ok) {
+                    loadedCourseData = await courseRes.json();
+                    renderLoadedCourse(loadedCourseData);
+                } else {
+                    showToast("Course not found in database.");
+                }
+            } catch (err) {
+                console.error("Error loading course:", err);
+                showToast("Failed to fetch course details.");
+            } finally {
+                document.getElementById('courseLoadingState').classList.add('hidden');
+            }
+        }
+
+        function renderLoadedCourse(data) {
+            // Header title set to Instructor Name
+            const tutorName = data.instructor ? data.instructor.name : (data.title || "Course Details");
+            document.getElementById('headerTitle').innerText = tutorName;
+
+            if (data.type === 'live') {
+                document.getElementById('liveCourseStudio').classList.remove('hidden');
+
+                // Render Thumbnail
+                if (data.thumbnail) {
+                    document.getElementById('liveThumbnailPreview').src = data.thumbnail;
+                    document.getElementById('liveThumbnailPreview').classList.remove('hidden');
+                    document.getElementById('liveThumbnailPlaceholder').classList.add('hidden');
+                }
+
+                document.getElementById('liveCourseTitle').innerText = data.title || "Untitled Course";
+                document.getElementById('viewerPriceText').innerText = data.price ? `$${data.price}` : "Free";
+                document.getElementById('viewerDiscountText').innerText = data.discountNote || "";
+
+                document.getElementById('liveScheduleDate').innerText = data.scheduleDate || "";
+                document.getElementById('liveDuration').innerText = data.duration || "";
+                document.getElementById('liveSeats').innerText = data.seats || "";
+                document.getElementById('liveClassCount').innerText = data.classes || "";
+                document.getElementById('liveProjectCount').innerText = data.projects || "";
+                document.getElementById('liveCourseAbout').innerText = data.about || "";
+
+                if (data.curriculum) liveModules = data.curriculum;
+                renderLiveModules();
+
+                if (data.instructor) {
+                    document.getElementById('instructorNameInput').value = data.instructor.name || "";
+                    document.getElementById('instructorTitleInput').value = data.instructor.profession || "";
+                    if (data.instructor.avatar) {
+                        document.getElementById('instructorAvatarPreview').src = data.instructor.avatar;
+                        document.getElementById('instructorAvatarPreview').classList.remove('hidden');
+                        document.getElementById('instructorAvatarPlaceholder').classList.add('hidden');
+                    }
+                }
+
+                if (data.benefits) {
+                    document.getElementById('liveBenefitsList').innerHTML = data.benefits.map(b => `<div>${b}</div>`).join('');
+                }
+
+            } else {
+                // Ready-Made Viewer Render
+                document.getElementById('readyMadeViewerContainer').classList.remove('hidden');
+
+                document.getElementById('readyViewerTitle').innerText = data.title || "Ready-Made Material";
+                document.getElementById('readyViewerPrice').innerText = data.price ? `$${data.price}` : "Free";
+                document.getElementById('readyViewerDiscount').innerText = data.discountNote || "";
+                document.getElementById('readyViewerDescription').innerText = data.description || "No description provided.";
+
+                if (data.thumbnail) {
+                    document.getElementById('readyViewerThumbnail').src = data.thumbnail;
+                }
+
+                const formatBadge = document.getElementById('readyFormatBadge');
+                const openBtnLabel = document.getElementById('openMaterialLabel');
+                const openBtnIcon = document.getElementById('openMaterialIcon');
+
+                if (data.format === 'pdf') {
+                    formatBadge.innerHTML = `<i class="fa-solid fa-file-pdf text-amber-400"></i><span>PDF DOCUMENT</span>`;
+                    openBtnLabel.innerText = "Open PDF Reader";
+                    openBtnIcon.className = "fa-solid fa-file-pdf";
+                    document.getElementById('readyDeliverablesHeading').innerText = "What's Included";
+                    document.getElementById('readyViewerDeliverables').innerText = data.deliverables || "Complete Digital PDF Material";
+                } else {
+                    formatBadge.innerHTML = `<i class="fa-solid fa-circle-play text-amber-400"></i><span>VIDEO MATERIAL</span>`;
+                    openBtnLabel.innerText = "Watch Video Content";
+                    openBtnIcon.className = "fa-solid fa-circle-play";
+
+                    if (data.chapters && data.chapters.length > 0) {
+                        document.getElementById('readyDeliverablesHeading').innerText = "Video Chapters";
+                        document.getElementById('readyViewerDeliverables').innerHTML = data.chapters.map(c => `
+                            <div class="flex items-center justify-between py-1 border-b border-slate-100 last:border-0">
+                                <span>${c.title}</span>
+                                <i class="fa-solid fa-play text-[10px] text-brand-purple"></i>
+                            </div>
+                        `).join('');
+                    } else {
+                        document.getElementById('readyViewerDeliverables').innerText = "1 Full-length Video Masterclass";
+                    }
+                }
+            }
+        }
+
+        // Enable Course Studio Mode (Default)
+        function enableCourseStudioMode() {
+            isViewerMode = false;
+            document.body.className = "flex justify-center min-h-screen sm:py-6 sm:px-4 edit-mode";
+            document.getElementById('headerTitle').innerText = "Create Course";
+            renderLiveModules();
+            renderReadyVideoChapters();
+        }
+
+        // 3. CURRICULUM RENDER
+        function renderLiveModules() {
+            const container = document.getElementById('liveModulesContainer');
+            container.innerHTML = '';
+
+            liveModules.forEach((mod, modIdx) => {
+                const modDiv = document.createElement('div');
+                modDiv.className = "border border-slate-200/80 bg-white rounded-2xl p-3.5 space-y-3 shadow-sm";
+                
+                let lessonsHtml = mod.lessons.map((lesson, lesIdx) => `
+                    <div class="flex items-center justify-between space-x-2 text-xs bg-slate-50 px-3 py-2 rounded-xl">
+                        <div class="flex items-center space-x-2 flex-1">
+                            <span class="text-slate-400 font-bold">•</span>
+                            <span contenteditable="${!isViewerMode}" onblur="updateLiveLesson(${modIdx}, ${lesIdx}, this.innerText)" class="font-medium text-slate-800 outline-none flex-1">${lesson}</span>
+                        </div>
+                        ${!isViewerMode ? `
+                            <button onclick="removeLiveLesson(${modIdx}, ${lesIdx})" class="text-slate-300 hover:text-red-500">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                `).join('');
+
+                modDiv.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <div class="flex-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">Module 0${modIdx + 1}</span>
+                            <h4 contenteditable="${!isViewerMode}" onblur="updateLiveModuleTitle(${modIdx}, this.innerText)" class="text-sm font-bold text-slate-900 outline-none">${mod.title}</h4>
+                        </div>
+                        ${!isViewerMode ? `
+                            <button onclick="removeLiveModule(${modIdx})" class="text-slate-300 hover:text-red-500 p-1">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="space-y-1.5">${lessonsHtml}</div>
+                    ${!isViewerMode ? `
+                        <button onclick="addLiveLesson(${modIdx})" class="text-[11px] font-bold text-brand-purple hover:underline flex items-center space-x-1 pt-1">
+                            <i class="fa-solid fa-plus text-[10px]"></i>
+                            <span>Add Lesson Topic</span>
+                        </button>
+                    ` : ''}
+                `;
+                container.appendChild(modDiv);
+            });
+        }
+
+        function addLiveModule() {
+            liveModules.push({ id: Date.now(), title: "New Custom Module", lessons: ["Overview Topic"] });
+            renderLiveModules();
+        }
+
+        function removeLiveModule(idx) {
+            liveModules.splice(idx, 1);
+            renderLiveModules();
+        }
+
+        function updateLiveModuleTitle(idx, val) { if (liveModules[idx]) liveModules[idx].title = val; }
+        function addLiveLesson(modIdx) { liveModules[modIdx].lessons.push("New Lesson Topic"); renderLiveModules(); }
+        function updateLiveLesson(modIdx, lesIdx, val) { if (liveModules[modIdx] && liveModules[modIdx].lessons[lesIdx] !== undefined) liveModules[modIdx].lessons[lesIdx] = val; }
+        function removeLiveLesson(modIdx, lesIdx) { liveModules[modIdx].lessons.splice(lesIdx, 1); renderLiveModules(); }
+
+        // READY-MADE VIDEO CHAPTERS
+        function renderReadyVideoChapters() {
+            const container = document.getElementById('readyVideoChaptersList');
+            if (!container) return;
+            container.innerHTML = '';
+
+            readyVideoChapters.forEach((ch, idx) => {
+                const row = document.createElement('div');
+                row.className = "bg-white p-3 rounded-2xl border border-slate-200 flex items-center justify-between space-x-2";
+                row.innerHTML = `
+                    <div class="flex-1 space-y-1">
+                        <input type="text" value="${ch.title}" onchange="readyVideoChapters[${idx}].title = this.value" placeholder="Video Title" class="text-xs font-bold text-slate-800 w-full outline-none">
+                        <span class="text-[10px] text-slate-400 flex items-center space-x-1 cursor-pointer" onclick="triggerFileUpload('videoChapInput_${idx}')">
+                            <i class="fa-solid fa-paperclip"></i>
+                            <span id="videoChapLabel_${idx}">${ch.fileUrl ? 'Video Attached' : 'Attach Video File'}</span>
+                        </span>
+                        <input type="file" id="videoChapInput_${idx}" class="hidden" accept="video/*" onchange="uploadChapterVideo(event, ${idx})">
+                    </div>
+                    <button onclick="removeReadyVideoChapter(${idx})" class="text-slate-300 hover:text-red-500">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addReadyVideoChapter() { readyVideoChapters.push({ id: Date.now(), title: `Chapter ${readyVideoChapters.length + 1}`, fileUrl: "" }); renderReadyVideoChapters(); }
+        function removeReadyVideoChapter(idx) { readyVideoChapters.splice(idx, 1); renderReadyVideoChapters(); }
+
+        // 4. SWITCHERS
+        function switchCourseType(type) {
+            if (isViewerMode) return;
+            activeType = type;
+            const liveTab = document.getElementById('tabLiveBtn');
+            const readyTab = document.getElementById('tabReadyBtn');
+            const liveStudio = document.getElementById('liveCourseStudio');
+            const readyStudio = document.getElementById('readyCourseStudio');
+
+            if (type === 'live') {
+                liveTab.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-900 shadow-sm flex items-center justify-center space-x-1.5";
+                readyTab.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-slate-800 flex items-center justify-center space-x-1.5";
+                liveStudio.classList.remove('hidden');
+                readyStudio.classList.add('hidden');
+            } else {
+                readyTab.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-900 shadow-sm flex items-center justify-center space-x-1.5";
+                liveTab.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-slate-800 flex items-center justify-center space-x-1.5";
+                readyStudio.classList.remove('hidden');
+                liveStudio.classList.add('hidden');
+            }
+        }
+
+        function switchReadyFormat(format) {
+            readyFormat = format;
+            const pdfBtn = document.getElementById('formatPdfBtn');
+            const videoBtn = document.getElementById('formatVideoBtn');
+            const pdfContainer = document.getElementById('pdfFieldsContainer');
+            const videoContainer = document.getElementById('videoFieldsContainer');
+
+            if (format === 'pdf') {
+                pdfBtn.className = "p-3.5 rounded-2xl border-2 border-brand-purple bg-purple-50/50 flex flex-col items-center space-y-1.5 transition-all";
+                videoBtn.className = "p-3.5 rounded-2xl border-2 border-slate-200 bg-white flex flex-col items-center space-y-1.5 transition-all";
+                pdfContainer.classList.remove('hidden');
+                videoContainer.classList.add('hidden');
+            } else {
+                videoBtn.className = "p-3.5 rounded-2xl border-2 border-brand-purple bg-purple-50/50 flex flex-col items-center space-y-1.5 transition-all";
+                pdfBtn.className = "p-3.5 rounded-2xl border-2 border-slate-200 bg-white flex flex-col items-center space-y-1.5 transition-all";
+                videoContainer.classList.remove('hidden');
+                pdfContainer.classList.add('hidden');
+            }
+        }
+
+        function switchVideoMode(mode) {
+            readyVideoMode = mode;
+            const singleTab = document.getElementById('videoSingleTab');
+            const moduleTab = document.getElementById('videoModuleTab');
+            const singleSec = document.getElementById('singleVideoSection');
+            const moduleSec = document.getElementById('moduleVideoSection');
+
+            if (mode === 'single') {
+                singleTab.className = "flex-1 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-900 shadow-sm";
+                moduleTab.className = "flex-1 py-1.5 rounded-xl text-xs font-bold text-slate-600";
+                singleSec.classList.remove('hidden');
+                moduleSec.classList.add('hidden');
+            } else {
+                moduleTab.className = "flex-1 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-900 shadow-sm";
+                singleTab.className = "flex-1 py-1.5 rounded-xl text-xs font-bold text-slate-600";
+                moduleSec.classList.remove('hidden');
+                singleSec.classList.add('hidden');
+            }
+        }
+
+        // 5. MEDIA UPLOADS
+        function triggerFileUpload(id) { if (!isViewerMode) document.getElementById(id).click(); }
+
+        async function uploadMediaFile(file, folder = "uploads") {
+            try {
+                showToast("Uploading asset...");
+                const uploadPath = `${folder}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+                const res = await fetch(`${DB_BASE}/media/${uploadPath}`, {
+                    method: "POST",
+                    headers: { "Content-Type": file.type || "application/octet-stream" },
+                    body: file
+                });
+
+                if (res.ok) {
+                    showToast("Uploaded successfully!");
+                    return `https://storage.breacher.name.ng/U6op8Nr462Z46tBgxa2COUnja5z1/my-app/media/${uploadPath}`;
+                } else throw new Error("Upload failed");
+            } catch (err) {
+                return URL.createObjectURL(file);
+            }
+        }
+
+        async function handleThumbnailUpload(event, previewId) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const preview = document.getElementById(previewId);
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+            if (previewId === 'liveThumbnailPreview') document.getElementById('liveThumbnailPlaceholder')?.classList.add('hidden');
+
+            const url = await uploadMediaFile(file, "thumbnails");
+            if (previewId === 'liveThumbnailPreview') uploadedLiveThumbnailUrl = url;
+            if (previewId === 'readyThumbnailPreview') uploadedReadyThumbnailUrl = url;
+            if (previewId === 'instructorAvatarPreview') uploadedInstructorAvatarUrl = url;
+        }
+
+        async function handlePdfFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById('pdfFileName').innerText = file.name;
+            uploadedPdfUrl = await uploadMediaFile(file, "documents");
+        }
+
+        async function handleVideoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById('singleVideoFileName').innerText = file.name;
+            uploadedSingleVideoUrl = await uploadMediaFile(file, "videos");
+        }
+
+        async function uploadChapterVideo(event, idx) {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById(`videoChapLabel_${idx}`).innerText = file.name;
+            readyVideoChapters[idx].fileUrl = await uploadMediaFile(file, "videos");
+        }
+
+        // 6. PRICING & PUBLISH TO DATABASE
+        function openPricingBottomSheet() {
+            const modal = document.getElementById('pricingBottomSheet');
+            const content = document.getElementById('pricingBottomSheetContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('translate-y-full'); }, 10);
+        }
+
+        function closePricingBottomSheet() {
+            const modal = document.getElementById('pricingBottomSheet');
+            const content = document.getElementById('pricingBottomSheetContent');
+            modal.classList.add('opacity-0');
+            content.classList.add('translate-y-full');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        async function saveAndPublishCourse() {
+            const priceVal = parseFloat(document.getElementById('pricingAmount').value) || 0;
+            const discountNote = document.getElementById('pricingDiscountNote').value || "";
+            const courseId = "item_" + Date.now();
+            const instructorName = document.getElementById('instructorNameInput').value;
+            const instructorTitle = document.getElementById('instructorTitleInput').value;
+
+            let coursePayload = {};
+
+            if (activeType === 'live') {
+                coursePayload = {
+                    id: courseId,
+                    type: 'live',
+                    title: document.getElementById('liveCourseTitle').innerText.trim(),
+                    thumbnail: uploadedLiveThumbnailUrl || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=1000",
+                    price: priceVal,
+                    discountNote: discountNote,
+                    scheduleDate: document.getElementById('liveScheduleDate').innerText.trim(),
+                    duration: document.getElementById('liveDuration').innerText.trim(),
+                    seats: document.getElementById('liveSeats').innerText.trim(),
+                    classes: document.getElementById('liveClassCount').innerText.trim(),
+                    projects: document.getElementById('liveProjectCount').innerText.trim(),
+                    about: document.getElementById('liveCourseAbout').innerText.trim(),
+                    curriculum: liveModules,
+                    instructor: { name: instructorName, profession: instructorTitle, avatar: uploadedInstructorAvatarUrl || "" },
+                    benefits: document.getElementById('liveBenefitsList').innerText.trim().split('\n'),
+                    createdAt: new Date().toISOString()
+                };
+            } else {
+                coursePayload = {
+                    id: courseId,
+                    type: 'ready-made',
+                    format: readyFormat,
+                    title: readyFormat === 'pdf' ? document.getElementById('pdfNameInput').value : document.getElementById('videoCourseTitle').value,
+                    thumbnail: uploadedReadyThumbnailUrl || uploadedLiveThumbnailUrl || "",
+                    price: priceVal,
+                    discountNote: discountNote,
+                    description: readyFormat === 'pdf' ? document.getElementById('pdfDescInput').value : document.getElementById('videoOverviewInput').value,
+                    deliverables: readyFormat === 'pdf' ? document.getElementById('pdfDeliverablesInput').value : "",
+                    pdfUrl: readyFormat === 'pdf' ? uploadedPdfUrl : "",
+                    videoMode: readyFormat === 'video' ? readyVideoMode : "",
+                    singleVideoUrl: readyFormat === 'video' && readyVideoMode === 'single' ? uploadedSingleVideoUrl : "",
+                    chapters: readyFormat === 'video' && readyVideoMode === 'module' ? readyVideoChapters : [],
+                    createdAt: new Date().toISOString()
+                };
+            }
+
+            const btn = document.getElementById('publishSubmitBtn');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Saving to DB...</span>`;
+
+            try {
+                const dbBranch = activeType === 'live' ? 'courses/live' : 'courses/readymade';
+                await fetch(`${DB_BASE}/${dbBranch}/${courseId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(coursePayload)
+                });
+
+                const userId = currentUser ? currentUser.id : "usr_guest";
+                await fetch(`${DB_BASE}/users/${userId}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name: instructorName,
+                        profession: instructorTitle,
+                        bio: document.getElementById('liveCourseAbout').innerText.trim()
+                    })
+                });
+
+                const userCoursesRes = await fetch(`${DB_BASE}/users/${userId}/courses`);
+                let userCourses = [];
+                if (userCoursesRes.ok) {
+                    const existing = await userCoursesRes.json();
+                    if (Array.isArray(existing)) userCourses = existing;
+                }
+                userCourses.push({ id: courseId, type: activeType, title: coursePayload.title, createdAt: coursePayload.createdAt });
+
+                await fetch(`${DB_BASE}/users/${userId}/courses`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(userCourses)
+                });
+
+                btn.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>Published!</span>`;
+                setTimeout(() => {
+                    closePricingBottomSheet();
+                    showToast("🎉 Published! Redirecting to viewer...");
+                    window.location.search = `?course=${courseId}`;
+                }, 800);
+
+            } catch (err) {
+                btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>Retry Publish</span>`;
+                showToast("Failed to save course.");
+            }
+        }
+
+        // 7. READERS & MEDIA PLAYERS
+        function handleOpenReadyMaterial() {
+            if (!loadedCourseData) return;
+
+            if (loadedCourseData.format === 'pdf' || loadedCourseData.pdfUrl) {
+                openPdfReaderSheet(loadedCourseData.pdfUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf");
+            } else {
+                openVideoModal(loadedCourseData.singleVideoUrl || (loadedCourseData.chapters?.[0]?.fileUrl) || "");
+            }
+        }
+
+        function openPdfReaderSheet(pdfUrl) {
+            const modal = document.getElementById('pdfReaderSheet');
+            const content = document.getElementById('pdfReaderSheetContent');
+            const iframe = document.getElementById('pdfIframeViewer');
+            
+            iframe.src = pdfUrl;
+            document.getElementById('pdfSheetTitle').innerText = loadedCourseData?.title || "Document Reader";
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('translate-y-full'); }, 10);
+        }
+
+        function closePdfReaderSheet() {
+            const modal = document.getElementById('pdfReaderSheet');
+            const content = document.getElementById('pdfReaderSheetContent');
+            modal.classList.add('opacity-0');
+            content.classList.add('translate-y-full');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function changePdfPage(delta) {
+            currentPdfPage = Math.max(1, Math.min(totalPdfPages, currentPdfPage + delta));
+            document.getElementById('pdfPageIndicator').innerText = `${currentPdfPage} / ${totalPdfPages}`;
+        }
+
+        function openVideoModal(videoUrl) {
+            const modal = document.getElementById('videoPlayerModal');
+            const video = document.getElementById('videoElement');
+            video.src = videoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+            document.getElementById('videoModalTitle').innerText = loadedCourseData?.title || "Course Video";
+
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            video.play();
+        }
+
+        function closeVideoModal() {
+            const modal = document.getElementById('videoPlayerModal');
+            const video = document.getElementById('videoElement');
+            video.pause();
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // UTILITY TOAST & SHARE
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'bg-slate-900/90 text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-xl backdrop-blur-md toast-pop text-center pointer-events-auto mb-2';
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 2600);
+        }
+
+        function triggerShare() {
+            if (navigator.share) {
+                navigator.share({ title: document.title, url: window.location.href });
+            } else {
+                showToast("Link copied to clipboard!");
+            }
+        }
+
+        function handleEnrollInCourse() {
+            showToast("🎉 Enrolled successfully!");
+        }
+
+        function handleBack() {
+            if (isViewerMode) {
+                window.location.search = "";
+            } else {
+                showToast("Exiting...");
+            }
+        }
+    </script>
+</body>
+</html>
