@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EduRise - Learn Anytime</title>
+    <title>EduRise</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -548,6 +548,13 @@
             100% { transform: rotate(360deg); }
         }
     </style>
+  <meta name="theme-color" content="#03331B" />
+  <meta name="description" content="Your one stop educational station." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./pwa.css">
+  <link rel="apple-touch-icon" href="./1000760180.png">
 </head>
 <body class="antialiased">
 
@@ -1429,5 +1436,6 @@
             document.querySelectorAll('.reveal-item').forEach(el => revealObserver.observe(el));
         }
     </script>
+  <script src="./pwa.js"></script>
 </body>
 </html>

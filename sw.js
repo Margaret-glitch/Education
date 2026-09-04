@@ -1,12 +1,10 @@
-const CACHE_NAME = 'bloomup-pwa-v1';
+const CACHE_NAME = 'edurise-pwa-v1';
 const ASSETS = [
     './',
-    './avatar.svg',
-    './editor.main.css',
     './index.html',
-    './index-B8CIYrSi.css',
-    './icon.png',
-    './addEnv.svg',
+    './view.html',
+    './create_course.html',
+    './1000760180.png',
     './pwa.css',
     './pwa.js',
     './manifest.json'
