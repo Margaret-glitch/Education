@@ -1,13 +1,9 @@
 const CACHE_NAME = 'edurise-pwa-v1';
 const ASSETS = [
-    './',
-    './index.html',
-    './view.html',
-    './create_course.html',
-    './1000760180.png',
-    './pwa.css',
-    './pwa.js',
-    './manifest.json'
+    '/',
+    '/pwa.css',
+    '/pwa.js',
+    '/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -31,6 +27,10 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
+            // Do not cache api routes or server actions to prevent stale data
+            if (event.request.url.includes('/api/')) {
+                return fetch(event.request);
+            }
             return cachedResponse || fetch(event.request);
         })
     );

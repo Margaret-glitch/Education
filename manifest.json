@@ -1,48 +1,52 @@
 {
   "name": "EduRise",
   "short_name": "EduRise",
-  "start_url": "./index.html",
+  "description": "EduRise mobile learning platform with interactive course dashboard.",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#03331B",
-  "theme_color": "#03331B",
-  "description": "Your one stop educational station.",
-  "mobile_app": "true",
+  "background_color": "#2D01F4",
+  "theme_color": "#2D01F4",
   "icons": [
     {
-      "src": "./1000760180.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "./1000760180.png",
-      "sizes": "512x512",
+      "src": "https://cdn.phototourl.com/free/2026-09-09-69cae587-1b1c-4e6b-9960-617a3fcd8b50.png",
+      "sizes": "192x192 512x512",
       "type": "image/png"
     }
   ],
   "shortcuts": [
     {
-      "name": "Create course",
-      "short_name": "Create course",
-      "url": "/view.html",
-      "description": "Open Create course",
+      "name": "My Courses",
+      "short_name": "Courses",
+      "description": "View your enrolled courses",
+      "url": "/?view=my-courses",
       "icons": [
         {
-          "src": "./1000760180.png",
-          "sizes": "192x192",
-          "type": "image/png"
+          "src": "https://cdn.phototourl.com/free/2026-09-09-69cae587-1b1c-4e6b-9960-617a3fcd8b50.png",
+          "sizes": "192x192"
         }
       ]
     },
     {
-      "name": "Home",
-      "short_name": "Home",
-      "url": "/index",
-      "description": "Open Home",
+      "name": "Discover",
+      "short_name": "Discover",
+      "description": "Discover new courses",
+      "url": "/",
       "icons": [
         {
-          "src": "./1000760180.png",
-          "sizes": "192x192",
-          "type": "image/png"
+          "src": "https://cdn.phototourl.com/free/2026-09-09-69cae587-1b1c-4e6b-9960-617a3fcd8b50.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Go to your dashboard",
+      "url": "/?view=dashboard",
+      "icons": [
+        {
+          "src": "https://cdn.phototourl.com/free/2026-09-09-69cae587-1b1c-4e6b-9960-617a3fcd8b50.png",
+          "sizes": "192x192"
         }
       ]
     }

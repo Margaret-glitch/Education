@@ -1,6 +1,6 @@
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
+        navigator.serviceWorker.register('/sw.js')
             .catch(err => console.log('SW registration failed:', err));
     });
 }
@@ -14,7 +14,7 @@ function injectPWAModal() {
     modalWrapper.innerHTML = `
       <div 
         id="installModal"
-        aria-color="#22c55e"
+        aria-color="#2D01F4"
         role="dialog"
         aria-labelledby="modalTitle"
         aria-describedby="modalDesc"
@@ -22,7 +22,7 @@ function injectPWAModal() {
       >
         <div class="w-full h-32 bg-slate-900 overflow-hidden flex items-center justify-center relative">
           <img 
-            src="./1000760180.png" 
+            src="https://cdn.phototourl.com/free/2026-09-09-69cae587-1b1c-4e6b-9960-617a3fcd8b50.png" 
             alt="App Preview Header"
             class="w-full h-full object-cover object-center pointer-events-none select-none"
             onerror="this.src='https://placehold.co/600x300/181824/22c55e?text=Install+App'"
@@ -67,7 +67,7 @@ function injectPWAModal() {
 function applyAriaColor() {
     const modal = document.getElementById('installModal');
     if (!modal) return;
-    const themeColor = modal.getAttribute('aria-color') || '#7c5cfc';
+    const themeColor = modal.getAttribute('aria-color') || '#2D01F4';
     modal.style.setProperty('--theme-accent', themeColor);
 }
 
