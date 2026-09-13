@@ -1,6 +1,19 @@
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
+            .then((reg) => {
+                window.__swRegistration = reg;
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    if (newWorker) {
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                window.dispatchEvent(new CustomEvent('swUpdateAvailable', { detail: reg }));
+                            }
+                        });
+                    }
+                });
+            })
             .catch(err => console.log('SW registration failed:', err));
     });
 }

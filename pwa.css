@@ -57,3 +57,19 @@
 .install-btn-accent:active {
   transform: scale(0.98);
 }
+
+/* Universal Floating Bottom Nav rule for static exports and mobile PWA */
+#floatingBottomNav,
+.floating-bottom-nav-fixed {
+  position: fixed !important;
+  bottom: max(1.5em, calc(1.5em + env(safe-area-inset-bottom, 0px))) !important;
+  left: 1rem !important;
+  right: 1rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: calc(100% - 2rem) !important;
+  max-width: 398px !important;
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+}
+
