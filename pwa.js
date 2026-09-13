@@ -27,7 +27,7 @@ function injectPWAModal() {
     modalWrapper.innerHTML = `
       <div 
         id="installModal"
-        aria-color="#2D01F4"
+        aria-color="#4e352d"
         role="dialog"
         aria-labelledby="modalTitle"
         aria-describedby="modalDesc"
@@ -80,7 +80,7 @@ function injectPWAModal() {
 function applyAriaColor() {
     const modal = document.getElementById('installModal');
     if (!modal) return;
-    const themeColor = modal.getAttribute('aria-color') || '#2D01F4';
+    const themeColor = modal.getAttribute('aria-color') || '#4e352d';
     modal.style.setProperty('--theme-accent', themeColor);
 }
 

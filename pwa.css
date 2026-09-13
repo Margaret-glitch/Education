@@ -47,7 +47,7 @@
 }
 
 .install-btn-accent {
-  background-color: var(--theme-accent, #2D01F4);
+  background-color: var(--theme-accent, #4e352d);
 }
 
 .install-btn-accent:hover {
