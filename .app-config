@@ -1,0 +1,41 @@
+{
+  "name": "EduRise",
+  "packageId": "com.breacher.edurise",
+  "url": "https://education.breacher.name.ng/",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "themeColor": "#4e352d",
+  "splashBackgroundColor": "#4e352d",
+  "navigationColor": "#4e352d",
+  "navigationColorDark": "#1e1233",
+  "iconUrl": "https://cdn.phototourl.com/free/2026-09-09-69cae587-1b1c-4e6b-9960-617a3fcd8b50.png",
+  "displayMode": "standalone",
+  "orientation": "portrait",
+  "permissions": [
+    "notifications",
+    "location"
+  ],
+  "shortcuts": [
+    {
+      "name": "My Courses",
+      "shortName": "Courses",
+      "url": "/?view=my-courses",
+      "iconUrl": "https://cdn.phototourl.com/free/2026-09-09-69cae587-1b1c-4e6b-9960-617a3fcd8b50.png"
+    },
+    {
+      "name": "Discover",
+      "shortName": "Discover",
+      "url": "/",
+      "iconUrl": "https://cdn.phototourl.com/free/2026-09-09-69cae587-1b1c-4e6b-9960-617a3fcd8b50.png"
+    },
+    {
+      "name": "Dashboard",
+      "shortName": "Dashboard",
+      "url": "/?view=dashboard",
+      "iconUrl": "https://cdn.phototourl.com/free/2026-09-09-69cae587-1b1c-4e6b-9960-617a3fcd8b50.png"
+    }
+  ],
+  "lastBuildJobId": "apk_6c25dd17320f4945",
+  "lastBuiltAt": "2026-09-13T19:45:53.996Z",
+  "lastBuildStatus": "completed"
+}

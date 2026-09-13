@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.breacher.edurise",
+        "sha256_cert_fingerprints": ["A3:4C:29:02:57:09:C3:43:36:B9:4D:DB:83:2C:94:C9:BE:DD:6A:C9:7C:53:9B:F7:0B:92:10:18:B7:E1:91:BB"]
+      }
+    }]
